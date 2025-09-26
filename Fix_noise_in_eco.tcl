@@ -33,7 +33,6 @@ if {$loads == 1} {
 
 } else {
     puts "Skipping $NET as it has multiple drivers, Suggest to fix it manually"
-    continue
 }}
 
 
