@@ -1,0 +1,29 @@
+##################Usage: get_trans_fix <list of pin having trans>
+###############################################
+#############################
+###############################################################################
+proc gen_trans_fix { input_file_list } {
+set fh [open "output.eco.tcl" "w"]
+set rh [open "$input_file_list" "r"]
+while {[gets $rh line] >= 0} {
+    set line [string trim $line]
+
+    if {$line eq ""} { continue }
+    if {[string match "#*" $line]} { continue }
+set pin_name $line
+set driver_inst_name [get_db [get_db [get_db pins $pin_name] .net.drivers.inst] .name]
+set driver_cell_name [get_db [get_db [get_db pins $pin_name] .net.drivers.inst] .lib_cell.base_name  -unique ]
+set new_cell_name [regsub {D[0-9]+} $driver_cell_name {D4}]
+##check if cell is valid in the library
+set check_new_cell [get_db [get_db base_cells $new_cell_name] .name]
+	if {$new_cell_name ne ""} {
+        puts $fh "#$new_cell_name is  valid Swapping $driver_cell_name --> $new_cell_name inst name is $driver_inst_name new cell check $new_cell_name "
+	puts $fh "eco_update_cell -insts $driver_inst_name  -cells $new_cell_name"
+        } else {
+	puts $fh "$new_cell_name is not valid trying for D2 driver"
+	set new_cell_name [string map {"D4" "D2"} $driver_cell_name]
+	puts $fh "eco_update_cell -insts $driver_inst_name  -cells $new_cell_name"
+}
+}
+close $fh
+close $rh
